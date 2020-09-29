@@ -1,0 +1,18 @@
+---
+    - name: Restart Portus
+      docker_container:
+        name: portus
+        restart: yes
+      listen: restart portus
+
+    - name: Restart Registry
+      docker_container:
+        name: registry
+        restart: yes
+      listen: restart registry
+
+    - name: Restart Clair
+      docker_container:
+        name: clair
+        restart: yes
+      listen: restart clair

@@ -1,0 +1,6 @@
+---
+- name: Restart Postgres
+  docker_container:
+    name: database
+    restart: yes
+  listen: restart postgres

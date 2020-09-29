@@ -1,0 +1,12 @@
+---
+- name: Restart Guacd
+  docker_container:
+    name: guacd
+    restart: yes
+  listen: restart gucad
+
+- name: Restart Guacamole
+  docker_container:
+    name: guacamole
+    restart: yes
+  listen: restart guacamole

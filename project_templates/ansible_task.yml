@@ -1,0 +1,79 @@
+---
+- name: Ensure FreeIPA DNS Record Exist
+  ipa_dnsrecord:
+    ipa_host: "freeipa.{{project_tld}}"
+    ipa_user: "{{freeipa_username}}"
+    ipa_pass: "{{freeipa_password}}"
+    name: SERVICE_NAME
+    record_type: CNAME
+    record_value: "SERVICE_NAME.{{project_tld}}."
+    zone_name: "{{project_tld}}"
+
+- name: Ensure SERVICE_NAME Directory Exist
+  file:
+    path: "{{project_directory}}/SERVICE_NAME"
+    state: directory
+    owner: "USERNAME"
+    group: "USERNAME"
+  tags: SERVICE_NAME
+
+- import_tasks: roles/postgres/tasks/database_manager.yml
+  vars:
+    database_name: "{{SERVICE_NAME_database}}"
+    database_user: "{{SERVICE_NAME_database_user}}"
+    database_password: "{{SERVICE_NAME_database_password}}"
+  no_log: true
+  tags: SERVICE_NAME
+
+- import_tasks: roles/mariadb/tasks/database_manager.yml
+  vars:
+    database_name: "{{SERVICE_NAME_database}}"
+    database_user: "{{SERVICE_NAME_database_user}}"
+    database_password: "{{SERVICE_NAME_database_password}}"
+  no_log: true
+  tags: SERVICE_NAME
+
+- import_tasks: roles/mongodb/tasks/database_manager.yml
+  vars:
+    database_name: "{{SERVICE_NAME_database}}"
+    database_user: "{{SERVICE_NAME_database_user}}"
+    database_password: "{{SERVICE_NAME_database_password}}"
+  no_log: true
+  tags: SERVICE_NAME
+
+- import_tasks: roles/matrix/tasks/notification.yml
+  vars:
+    notification_message: "TEXT"
+  tags: SERVICE_NAME
+
+- name: Ensure SERVICE_NAME Configuration Files Exist
+  template:
+    src: config.json.j2
+    dest: "{{project_directory}}/SERVICE_NAME/config.json"
+  notify: restart SERVICE_NAME
+  no_log: true
+  tags: SERVICE_NAME
+
+- name: Create SERVICE_NAME Docker Container
+  docker_container:
+    name: SERVICE_NAME
+    image: "{{registry_host}}/{{registry_username}}/docker-SERVICE_NAME:{{SERVICE_NAME_version}}"
+    pull: yes
+    hostname: SERVICE_NAME
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      ENV: "DATA"
+    volumes:
+      - "{{project_directory}}/SERVICE_NAME:/data"
+    labels:
+      traefik.http.routers.SERVICE_NAME.entrypoints: "websecure"
+      traefik.http.routers.SERVICE_NAME.tls: "true"
+      traefik.http.routers.SERVICE_NAME.rule: "Host(`SERVICE_NAME.{{project_tld}}`)"
+      traefik.http.routers.SERVICE_NAME.service: "SERVICE_NAME"
+      traefik.http.services.SERVICE_NAME.loadbalancer.server.port: "SERVICE_PORT"
+      traefik.enable: "true"
+  tags: SERVICE_NAME

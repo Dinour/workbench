@@ -1,0 +1,4 @@
+---
+leantime_database_user: "leantime"
+leantime_database_password: "{{vault_leantime_database_password}}"
+leantime_database: "leantime"

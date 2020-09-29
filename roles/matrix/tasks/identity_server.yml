@@ -1,0 +1,59 @@
+---
+- set_fact:
+    ma1sd_url_endpoint_public: "https://{{chat_tld}}/_matrix/identity/api/v1"
+
+- import_tasks: roles/postgres/tasks/database_manager.yml
+  vars:
+    database_name: "{{ma1sd_database}}"
+    database_user: "{{ma1sd_database_user}}"
+    database_password: "{{ma1sd_database_password}}"
+  tags: matrix
+  no_log: true
+
+- name: Create Matrix Identity Server Directory
+  file:
+    path: "{{project_directory}}/synapse/ma1sd"
+    state: directory
+  tags: matrix
+
+- name: Ensure Identity Server Config Exist
+  template:
+    src: ma1sd.yaml.j2
+    dest: "{{project_directory}}/synapse/ma1sd/etc/ma1sd.yaml"
+  no_log: true
+  tags: matrix
+
+- name: Ensure Email Templates Exist
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+  with_items:
+    - {src: invite-template.eml.j2,dest: "{{project_directory}}/synapse/ma1sd/var/invite-template.eml"}
+    - {src: validate-template.eml.j2,dest: "{{project_directory}}/synapse/ma1sd/var/validate-template.eml"}
+    - {src: unbind-fraudulent.eml.j2,dest: "{{project_directory}}/synapse/ma1sd/var/unbind-fraudulent.eml"}
+    - {src: mxid-template.eml.j2,dest: "{{project_directory}}/synapse/ma1sd/var/mxid-template.eml"}
+  tags: matrix
+
+- name: Create Matrix Identity Server Container
+  docker_container:
+    name: ma1sd
+    image: "ma1uta/ma1sd:{{matrix_version}}"
+    pull: yes
+    hostname: ma1sd
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/synapse/ma1sd/etc:/etc/ma1sd"
+      - "{{project_directory}}/synapse/ma1sd/var:/var/ma1sd"
+    labels:
+      traefik.http.routers.ma1sd.entrypoints: "websecure"
+      traefik.http.routers.ma1sd.tls: "true"
+      traefik.http.routers.ma1sd.rule: "(Host(`{{chat_tld}}`) && Path(`/_matrix/identity`))"
+      traefik.http.routers.ma1sd.middlewares: "default-headers@file"
+      traefik.http.routers.ma1sd.service: "ma1sd"
+      traefik.http.services.ma1sd.loadbalancer.server.port: "8090"
+      traefik.enable: "true"
+  tags: matrix

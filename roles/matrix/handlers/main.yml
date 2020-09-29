@@ -1,0 +1,30 @@
+---
+- name: Restart Matrix
+  docker_container:
+    name: synapse
+    restart: yes
+  listen: restart matrix
+
+- name: Restart Turn Server
+  docker_container:
+    name: coturn
+    restart: yes
+  listen: restart coturn
+
+- name: Restart Identity Server
+  docker_container:
+    name: ma1sd
+    restart: yes
+  listen: restart ma1sd
+
+- name: Restart InspIRCd
+  docker_container:
+    name: inspircd
+    restart: yes
+  listen: restart inspircd
+
+- name: Restart IRC Bridge
+  docker_container:
+    name: irc-bridge
+    restart: yes
+  listen: restart irc-bridge

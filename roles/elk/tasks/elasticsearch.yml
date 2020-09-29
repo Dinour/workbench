@@ -1,0 +1,52 @@
+---
+- name: Ensure Elasticsearch Volume Exist
+  docker_volume:
+    name: elasticsearch
+    state: present
+  notify: restart elasticsearch
+  tags:
+    - elasticsearch
+    - elk
+
+- name: Ensure Elasticsearch Directory Exist
+  file:
+    path: "{{project_directory}}/elasticsearch"
+    state: directory
+  tags:
+    - elasticsearch
+    - elk
+
+- name: Ensure Elasticsearch Configuration Files Exist
+  template:
+    src: elasticsearch.yml.j2
+    dest: "{{project_directory}}/elasticsearch/elasticsearch.yml"
+  notify: restart elasticsearch
+  no_log: true
+  tags:
+    - elasticsearch
+    - elk
+
+- name: Create Elasticsearch Docker Container
+  docker_container:
+    name: elasticsearch
+    hostname: elasticsearch
+    privileged: true
+    image: "docker.elastic.co/elasticsearch/elasticsearch:{{elk_stack_version}}"
+    pull: yes
+    restart_policy: unless-stopped
+    ulimits:
+      - memlock:-1:-1
+    env:
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+      ELASTIC_PASSWORD: "{{elasticsearch_password}}"
+      discovery.type: "single-node"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - elasticsearch:/usr/share/elasticsearch/data
+  tags:
+    - elasticsearch
+    - elk

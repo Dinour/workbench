@@ -1,0 +1,16 @@
+---
+- import_tasks: "{{role_path}}/tasks/filebeat.yml"
+  tags:
+    - elk
+
+- import_tasks: "{{role_path}}/tasks/logstash.yml"
+  tags:
+    - elk
+
+- import_tasks: "{{role_path}}/tasks/elasticsearch.yml"
+  tags:
+    - elk
+
+- import_tasks: "{{role_path}}/tasks/kibana.yml"
+  tags:
+    - elk

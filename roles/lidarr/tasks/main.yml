@@ -1,0 +1,52 @@
+---
+- name: Ensure Lidarr Directory Exist
+  file:
+    path: "{{project_directory}}/lidarr"
+    state: directory
+  tags: lidarr
+
+- name: Ensure Lidarr Configuration Files Exist
+  template:
+    src: config.xml.j2
+    dest: "{{project_directory}}/lidarr/config.xml"
+  notify: restart lidarr
+  no_log: true
+  tags: lidarr
+
+- name: Create Lidarr Docker Container
+  docker_container:
+    name: lidarr
+    image: "linuxserver/lidarr:{{lidarr_version}}"
+    pull: yes
+    hostname: lidarr
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      UMASK_SET: "<022>"
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/lidarr:/config"
+      - "{{media_directory}}/music:/media/music"
+      - "{{media_directory}}/downloads:/media/downloads"
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.lidarr.entrypoints: "websecure"
+      traefik.http.routers.lidarr.tls: "true"
+      traefik.http.routers.lidarr.rule: "Host(`lidarr.{{project_tld}}`)"
+      traefik.http.routers.lidarr.middlewares: "default-headers@file"
+      traefik.http.routers.lidarr.service: "lidarr"
+      traefik.http.services.lidarr.loadbalancer.server.port: "8686"
+      traefik.enable: "true"
+  tags: lidarr
+
+- import_tasks: "{{role_path}}/tasks/amd.yml"
+  tags:
+    - lidarr

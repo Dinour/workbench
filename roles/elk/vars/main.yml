@@ -1,0 +1,6 @@
+---
+elasticsearch_user: "elastic"
+elasticsearch_password: "{{vault_elasticsearch_password}}"
+elastic_hostname: "http://elasticsearch:9200"
+kibana_hostname: "http://kibana:5601"
+kibana_security_encryption_key: "{{vault_kibana_security_encryption_key}}"

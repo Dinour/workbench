@@ -1,0 +1,6 @@
+---
+    - name: Restart Evebox
+      docker_container:
+        name: evebox
+        restart: yes
+      listen: restart evebox

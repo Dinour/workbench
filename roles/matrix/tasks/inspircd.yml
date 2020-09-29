@@ -1,0 +1,33 @@
+---
+- name: Ensure InspIRCd Directory Exist
+  file:
+    path: "{{project_directory}}/inspircd"
+    state: directory
+  tags: irc
+
+- name: Create InspIRCd Docker Container
+  docker_container:
+    name: inspircd
+    image: "inspircd/inspircd-docker:{{inspircd_version}}"
+    pull: yes
+    hostname: inspircd
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: absent
+    env:
+      INSP_NET_SUFFIX: ".authoritah.chat"
+      INSP_NET_NAME: "Authoritah"
+      INSP_SERVER_NAME: "irc.authoritah.chat"
+      INSP_ADMIN_NAME: "nx211"
+      INSP_ADMIN_NICK: "nx211"
+      INSP_ADMIN_EMAIL: "support@{{project_tld}}"
+    volumes:
+      - "{{project_directory}}/inspircd:/inspircd/conf/"
+    labels:
+      traefik.tcp.routers.inspircd.rule: "HostSNI(`irc.{{chat_tld}}`)"
+      traefik.tcp.routers.inspircd.service: "inspircd"
+      traefik.tcp.services.inspircd.loadbalancer.server.address: "inspircd:6667"
+      traefik.enable: "true"
+  tags: irc

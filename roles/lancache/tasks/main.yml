@@ -1,0 +1,12 @@
+---
+- import_tasks: "{{role_path}}/tasks/lancache-dns.yml"
+  tags:
+    - lancache
+
+- import_tasks: "{{role_path}}/tasks/sniproxy.yml"
+  tags:
+    - lancache
+
+- import_tasks: "{{role_path}}/tasks/monolithic.yml"
+  tags:
+    - lancache

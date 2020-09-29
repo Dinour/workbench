@@ -1,0 +1,37 @@
+---
+- name: Create Matrix Turn Server Directory
+  file:
+    path: "{{project_directory}}/synapse/coturn"
+    state: directory
+  tags: matrix
+
+- name: Turn Server Configuration Files
+  template:
+    src: turnserver.conf.j2
+    dest: "{{project_directory}}/synapse/coturn/turnserver.conf"
+  tags: matrix
+  no_log: true
+  notify: restart matrix
+
+- name: Create Turn Server Docker Container
+  docker_container:
+    name: coturn
+    image: "instrumentisto/coturn:{{matrix_version}}"
+    pull: yes
+    hostname: coturn
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/synapse/coturn/turnserver.conf:/etc/coturn/turnserver.conf"
+    labels:
+      traefik.http.routers.coturn.entrypoints: "websecure"
+      traefik.http.routers.coturn.tls: "true"
+      traefik.http.routers.coturn.rule: "Host(`turn.{{chat_tld}}`)"
+      traefik.http.routers.coturn.middlewares: "default-headers@file"
+      traefik.http.routers.coturn.service: "coturn"
+      traefik.http.services.coturn.loadbalancer.server.port: "3478"
+      traefik.enable: "true"
+  tags: matrix

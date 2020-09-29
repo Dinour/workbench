@@ -1,0 +1,6 @@
+---
+- name: Restart Sabnzbd
+  docker_container:
+    name: sabnzbd
+    restart: yes
+  listen: restart sabnzbd

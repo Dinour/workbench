@@ -1,0 +1,6 @@
+---
+- name: Restart qBittorrent
+  docker_container:
+    name: qbittorrent
+    restart: yes
+  listen: restart qbittorrent

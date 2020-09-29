@@ -1,0 +1,23 @@
+setup.kibana:
+  host: "kibana:5601"
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+filebeat.modules:
+- module: traefik
+- module: logstash
+- module: elasticsearch
+
+processors:
+- add_cloud_metadata: ~
+
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true

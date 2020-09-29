@@ -1,0 +1,6 @@
+---
+- name: Restart Tdarr
+  docker_container:
+    name: tdarr
+    restart: yes
+  listen: restart tdarr

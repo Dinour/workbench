@@ -1,0 +1,41 @@
+---
+- name: Ensure Postgres Data Directory Exist
+  file:
+    path: "{{project_directory}}/postgres"
+    state: directory
+  tags: postgres
+
+- name: Create Postgres Docker Container
+  docker_container:
+    name: database
+    image: "postgres:{{postgres_version}}"
+    pull: yes
+    hostname: database
+    comparisons:
+      '*': strict
+    restart_policy: unless-stopped
+    published_ports:
+      - 5432:5432
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      POSTGRES_PASSWORD: "{{postgres_root_password}}"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - "{{project_directory}}/postgres/data/:/var/lib/postgresql/data/pgdata:Z"
+      - "{{project_directory}}/postgres/old/data/:/var/lib/postgresql/data/pgdata_old:Z"
+  tags: postgres
+
+- name: Wait for Postgres to accept connections
+  wait_for:
+    host: "{{postgres_host}}"
+    port: "{{postgres_port}}"
+    state: drained
+    connect_timeout: 1
+    timeout: 30
+  register: postgres_running
+  until: postgres_running is success
+  retries: 10
+  tags: postgres

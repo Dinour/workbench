@@ -1,0 +1,3 @@
+---
+lidarr_url: "http://lidarr:8686"
+lidarr_arl_token: "{{vault_lidarr_arl_token}}"

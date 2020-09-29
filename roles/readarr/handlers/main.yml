@@ -1,0 +1,6 @@
+---
+    - name: Restart Readarr
+      docker_container:
+        name: readarr
+        restart: yes
+      listen: restart readarr

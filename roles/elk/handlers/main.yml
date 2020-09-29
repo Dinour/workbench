@@ -1,0 +1,24 @@
+---
+- name: Restart Filebeat
+  docker_container:
+    name: filebeat
+    restart: yes
+  listen: restart filebeat
+
+- name: Restart Logstash
+  docker_container:
+    name: logstash
+    restart: yes
+  listen: restart logstash
+
+- name: Restart Elasticsearch
+  docker_container:
+    name: elasticsearch
+    restart: yes
+  listen: restart elasticsearch
+
+- name: Restart Kibana
+  docker_container:
+    name: kibana
+    restart: yes
+  listen: restart kibana

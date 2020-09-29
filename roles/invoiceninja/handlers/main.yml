@@ -1,0 +1,6 @@
+---
+    - name: Restart Invoice Ninja
+      docker_container:
+        name: invoiceninja
+        restart: yes
+      listen: restart invoiceninja

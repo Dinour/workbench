@@ -1,0 +1,4 @@
+---
+freshrss_database_user: "freshrss"
+freshrss_database_password: "{{vault_freshrss_database_password}}"
+freshrss_database: "freshrss"

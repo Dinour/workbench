@@ -1,0 +1,23 @@
+---
+- name: Deploy Base Services
+  hosts: servers
+  gather_facts: False
+  become: yes
+  roles:
+    - postgres
+    - mariadb
+    - mongodb
+    - redis
+    - tecnativa
+    - traefik
+    - matrix
+    - drone
+    - gitea
+    - portus
+    - molecule
+    - homer
+    - elk
+    - evebox
+    - netbootxyz
+    - trilium
+    - leantime

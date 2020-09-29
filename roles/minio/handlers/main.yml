@@ -1,0 +1,6 @@
+---
+- name: Restart MinIO
+  docker_container:
+    name: minio
+    restart: yes
+  listen: restart minio

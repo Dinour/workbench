@@ -1,0 +1,6 @@
+---
+invoiceninja_app_url: "http://invoice.{{project_tld}}"
+invoiceninja_database: "invoiceninja"
+invoiceninja_database_user: "invoiceninja"
+invoiceninja_application_key: "{{vault_invoiceninja_application_key}}"
+invoiceninja_database_password: "{{vault_invoiceninja_database_password}}"

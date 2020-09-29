@@ -1,0 +1,61 @@
+---
+- name: Ensure Photoprism Directory Exist
+  file:
+    path: "{{project_directory}}/photoprism/data"
+    state: directory
+  tags: photoprism
+
+- name: Ensure Photoprism Import Directory Exist
+  file:
+    path: "{{project_directory}}/photoprism/import"
+    state: directory
+  tags: photoprism
+
+- name: Ensure Photoprism Originals Directory Exist
+  file:
+    path: "{{project_directory}}/photoprism/originals"
+    state: directory
+  tags: photoprism
+
+- name: Ensure Photoprism Configuration Files Exist
+  template:
+    src: settings.yml.j2
+    dest: "{{project_directory}}/photoprism/data/settings/settings.yml"
+  notify: restart photoprism
+  no_log: true
+  tags: photoprism
+
+- import_tasks: roles/mariadb/tasks/database_manager.yml
+  vars:
+    database_name: "{{photoprism_database}}"
+    database_user: "{{photoprism_database_user}}"
+    database_password: "{{photoprism_database_password}}"
+  tags: photoprism
+
+- name: Create Photoprism Docker Container
+  docker_container:
+    name: photoprism
+    image: "photoprism/photoprism:{{photoprism_version}}"
+    pull: yes
+    hostname: photoprism
+    restart_policy: unless-stopped
+    security_opts:
+      - "seccomp=unconfined"
+      - "apparmor=unconfined"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/photoprism:/photoprism/originals"
+      - "{{project_directory}}/photoprism:/photoprism/import"
+      - "{{project_directory}}/photoprism/data:/photoprism/storage"
+    labels:
+      traefik.http.routers.photoprism.entrypoints: "websecure"
+      traefik.http.routers.photoprism.tls: "true"
+      traefik.http.routers.photoprism.rule: "Host(`{{photo_tld}}`)"
+      traefik.http.routers.photoprism.middlewares: "default-headers@file"
+      traefik.http.routers.photoprism.service: "photoprism"
+      traefik.http.services.photoprism.loadbalancer.server.port: "2342"
+      traefik.enable: "true"
+  tags: photoprism

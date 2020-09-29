@@ -1,0 +1,49 @@
+---
+- name: Ensure Readarr Directory Exist
+  file:
+    path: "{{project_directory}}/readarr"
+    state: directory
+    owner: "8675309"
+    group: "8675309"
+  tags: readarr
+
+- name: Ensure Readarr Configuration Files Exist
+  template:
+    src: "config.xml.j2"
+    dest: "{{project_directory}}/readarr/app/config.xml"
+  tags: readarr
+  no_log: true
+  notify: restart readarr
+
+- name: Create readarr Docker Container
+  docker_container:
+    name: readarr
+    image: "hotio/readarr:{{readarr_version}}"
+    pull: yes
+    hostname: readarr
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      UMASK: "002"
+      TZ: "{{default_timezone}}"
+      ARGS: ""
+      DEBUG: "no"
+    volumes:
+      - "{{project_directory}}/readarr:/config"
+      - "{{media_directory}}/books:/media/books"
+      - "{{media_directory}}/audiobooks:/media/audiobooks"
+      - "{{media_directory}}/downloads:/media/downloads"
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.readarr.entrypoints: "websecure"
+      traefik.http.routers.readarr.tls: "true"
+      traefik.http.routers.readarr.rule: "Host(`readarr.{{project_tld}}`)"
+      traefik.http.routers.readarr.service: "readarr"
+      traefik.http.services.readarr.loadbalancer.server.port: "8787"
+      traefik.enable: "true"
+  tags: readarr

@@ -1,0 +1,6 @@
+---
+- name: Restart Radarr
+  docker_container:
+    name: radarr
+    restart: yes
+  listen: restart radarr

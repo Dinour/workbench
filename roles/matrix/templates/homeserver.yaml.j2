@@ -1,0 +1,91 @@
+server_name: {{chat_tld}}
+pid_file: /data/homeserver.pid
+public_baseurl: https://{{chat_tld}}/
+web_client_location: https://element.{{chat_tld}}/
+federation_ip_range_blacklist:
+  - '127.0.0.0/8'
+  - '10.0.0.0/8'
+  - '172.16.0.0/12'
+  - '192.168.0.0/16'
+  - '100.64.0.0/10'
+  - '169.254.0.0/16'
+  - '::1/128'
+  - 'fe80::/64'
+  - 'fc00::/7'
+listeners:
+  - port: 8008
+    tls: false
+    type: http
+    x_forwarded: true
+    bind_addresses: ['::', '0.0.0.0']
+    resources:
+      - names: [client, federation]
+        compress: false
+admin_contact: 'mailto:support@{{project_tld}}'
+acme:
+  enabled: false
+  port: 80
+  bind_addresses: ['::', '0.0.0.0']
+  reprovision_threshold: 30
+  domain: {{chat_tld}}
+  account_key_file: /data/acme_account.key
+database:
+  name: psycopg2
+  args:
+    user: {{matrix_database_user}}
+    password: {{matrix_database_password}}
+    database: {{matrix_database}}
+    host: database
+    cp_min: 5
+    cp_max: 10
+log_config: /data/{{chat_tld}}.log.config
+media_store_path: /data/media_store
+uploads_path: /data/uploads
+turn_uris: turn:turn.{{chat_tld}}
+turn_shared_secret: "{{matrix_turn_secret}}"
+turn_allow_guests: true
+enable_registration: false
+allowed_local_3pids:
+  - medium: email
+    pattern: '.*@DOMAIN\.TLD'
+enable_3pid_lookup: true
+account_threepid_delegates:
+  email: https://{{chat_tld}}
+registration_shared_secret: "{{matrix_registration_shared_secret}}"
+allow_guest_access: false
+default_identity_server: https://{{chat_tld}}
+metrics_flags:
+report_stats: true
+macaroon_secret_key: "{{matrix_macaroon_secret_key}}"
+form_secret: "{{matrix_form_secret}}"
+signing_key_path: "/data/{{chat_tld}}.signing.key"
+trusted_key_servers:
+  - server_name: {{chat_tld}}
+trusted_third_party_id_servers:
+    - {{chat_tld}}
+suppress_key_server_warning: true
+saml2_config:
+password_config:
+  policy:
+    enabled: true
+    minimum_length: 15
+    require_digit: true
+    require_symbol: true
+    require_lowercase: true
+    require_uppercase: true
+email:
+  enable_notifs: ture
+  smtp_host: {{email_host}}
+  smtp_port: {{email_port}}
+  smtp_user: "{{email_user}}"
+  smtp_pass: "{{email_password}}"
+  require_transport_security: true
+  notif_from: "Your Friendly %(app)s homeserver <{{email_user}}>"
+  app_name: {{chat_tld}}
+  notif_for_new_users: true
+  client_base_url: "https://element.{{chat_tld}}"
+  validation_token_lifetime: 15m
+user_directory:
+  enabled: true
+  search_all_users: true
+opentracing:

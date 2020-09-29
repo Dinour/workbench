@@ -1,0 +1,28 @@
+---
+- name: Ensure Chow Down Directory Exist
+  file:
+    path: "{{project_directory}}/chowdown"
+    state: directory
+  tags: chowdown
+
+- name: Create Chow Down Docker Container
+  docker_container:
+    name: chowdown
+    image: "gregyankovoy/chowdown:{{chowdown_version}}"
+    pull: yes
+    hostname: chowdown
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: absent
+    volumes:
+      - "{{project_directory}}/chowdown:/config"
+    labels:
+      traefik.http.routers.chowdown.entrypoints: "websecure"
+      traefik.http.routers.chowdown.tls: "true"
+      traefik.http.routers.chowdown.rule: "Host(`chowdown.{{project_tld}}`)"
+      traefik.http.routers.chowdown.service: "chowdown"
+      traefik.http.services.chowdown.loadbalancer.server.port: "4000"
+      traefik.enable: "true"
+  tags: chowdown

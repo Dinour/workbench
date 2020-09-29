@@ -1,0 +1,6 @@
+---
+- name: Restart Jellyfin
+  docker_container:
+    name: jellyfin
+    restart: yes
+  listen: restart jellyfin

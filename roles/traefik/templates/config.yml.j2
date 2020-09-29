@@ -1,0 +1,51 @@
+http:
+  middlewares:
+    default-headers:
+      headers:
+        referrerPolicy: no-referrer
+        forceSTSHeader: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+    traefik-auth:
+      basicAuth:
+        users:
+          - "AUTH_STRING"
+    tdarr-auth:
+      basicAuth:
+        users:
+          - "AUTH_STRING"
+    netbootxyz-auth:
+      basicAuth:
+        users:
+          - "AUTH_STRING"
+  routers:
+    freeipa:
+      entryPoints:
+        - "websecure"
+      rule: "Host(`freeipa.{{project_tld}}`)"
+      tls: {}
+      middlewares:
+        - default-headers@file
+      service: "freeipa"
+  services:
+    freeipa:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.203/"
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      sniStrict : true
+      cipherSuites:
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305

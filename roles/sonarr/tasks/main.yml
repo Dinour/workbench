@@ -1,0 +1,51 @@
+---
+- name: Ensure Sonarr Directory Exist
+  file:
+    path: "{{project_directory}}/sonarr"
+    state: directory
+  tags: sonarr
+
+- name: Ensure Sonarr Configuration Files Exist
+  template:
+    src: config.xml.j2
+    dest: "{{project_directory}}/sonarr/config.xml"
+  tags: sonarr
+  no_log: true
+  notify: restart sonarr
+
+- name: Create Sonarr Docker Container
+  docker_container:
+    name: sonarr
+    image: "linuxserver/sonarr:{{sonarr_version}}"
+    pull: yes
+    hostname: sonarr
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    links:
+      - jackett:jackett
+    state: started
+    env:
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/sonarr:/config"
+      - "{{media_directory}}/tv:/media/tv"
+      - "{{media_directory}}/kids:/media/kids"
+      - "{{media_directory}}/anime:/media/anime"
+      - "{{media_directory}}/downloads:/media/downloads"
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.sonarr.entrypoints: "websecure"
+      traefik.http.routers.sonarr.tls: "true"
+      traefik.http.routers.sonarr.rule: "Host(`sonarr.{{project_tld}}`)"
+      traefik.http.routers.sonarr.middlewares: "default-headers@file"
+      traefik.http.routers.sonarr.service: "sonarr"
+      traefik.http.services.sonarr.loadbalancer.server.port: "8989"
+      traefik.enable: "true"
+  tags: sonarr

@@ -1,0 +1,22 @@
+---
+- name: Create Cadvisor Docker Container
+  docker_container:
+    name: cadvisor
+    image: "google/cadvisor:{{grafana_stack_version}}"
+    pull: yes
+    hostname: cadvisor
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    links:
+      - redis:redis
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+  tags:
+    - cadvisor
+    - grafana

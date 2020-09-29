@@ -1,0 +1,4 @@
+---
+gitea_database_user: "gitea"
+gitea_database_password: "{{vault_gitea_database_password}}"
+gitea_database: "gitea"

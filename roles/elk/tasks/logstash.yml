@@ -1,0 +1,44 @@
+---
+- name: Ensure Create Logstash Directory Exist
+  file:
+    path: "{{project_directory}}/elasticsearch/logstash/pipeline"
+    state: directory
+  tags:
+    - logstash
+    - elk
+- name: Ensure Logstash Configuration Files Exist
+  template:
+    src: logstash.yml.j2
+    dest: "{{project_directory}}/elasticsearch/logstash/logstash.yml"
+  notify: restart logstash
+  no_log: true
+  tags:
+    - logstash
+    - elk
+
+- name: Ensure Pipeline Configuration Files Exist
+  template:
+    src: logstash.conf.j2
+    dest: "{{project_directory}}/elasticsearch/logstash/pipeline/logstash.conf"
+  notify: restart logstash
+  tags:
+    - logstash
+    - elk
+
+- name: Create Logstash Docker Container
+  docker_container:
+    name: logstash
+    hostname: logstash
+    image: "docker.elastic.co/logstash/logstash:{{elk_stack_version}}"
+    pull: yes
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/elasticsearch/logstash:/config-dir"
+      - "{{project_directory}}/elasticsearch/logstash/pipeline:/usr/share/logstash/pipeline"
+  tags:
+    - logstash
+    - elk

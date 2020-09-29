@@ -1,0 +1,4 @@
+---
+teedy_database_user: "docs"
+teedy_database_password: "{{vault_teedy_database_password}}"
+teedy_database: "docs"

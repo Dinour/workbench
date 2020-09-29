@@ -1,0 +1,47 @@
+---
+- name: Ensure Kibana Directory Exist
+  file:
+    path: "{{project_directory}}/elasticsearch/kibana"
+    state: directory
+  tags:
+    - kibana
+    - elk
+
+- name: Ensure Kibana Configuration Files Exist
+  template:
+    src: kibana.yml.j2
+    dest: "{{project_directory}}/elasticsearch/kibana/kibana.yml"
+  notify: restart kibana
+  no_log: true
+  tags:
+    - kibana
+    - elk
+
+- name: Create Kibana Docker Container
+  docker_container:
+    name: kibana
+    hostname: kibana
+    image: "docker.elastic.co/kibana/kibana:{{elk_stack_version}}"
+    pull: yes
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/elasticsearch/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml"
+    env:
+      SERVER_NAME: "{{kibana_hostname}}"
+      ELASTICSEARCH_HOSTS: "{{elastic_hostname}}"
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+    labels:
+      traefik.http.routers.kibana.entrypoints: "websecure"
+      traefik.http.routers.kibana.tls: "true"
+      traefik.http.routers.kibana.rule: "Host(`kibana.{{project_tld}}`)"
+      traefik.http.routers.kibana.middlewares: "default-headers@file"
+      traefik.http.routers.kibana.service: "kibana"
+      traefik.http.services.kibana.loadbalancer.server.port: "5601"
+      traefik.enable: "true"
+  tags:
+    - kibana
+    - elk

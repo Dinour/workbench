@@ -1,0 +1,15 @@
+---
+- name: Create SNI Proxy Docker Container
+  docker_container:
+    name: sniproxy
+    image: "lancachenet/sniproxy:{{sniproxy_version}}"
+    pull: yes
+    hostname: sniproxy
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: absent
+    env:
+      UPSTREAM_DNS: "8.8.8.8 8.8.4.4"
+  tags: lancache

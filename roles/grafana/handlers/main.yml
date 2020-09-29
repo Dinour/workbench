@@ -1,0 +1,30 @@
+---
+- name: Restart Node Exporter
+  docker_container:
+    name: node-exporter
+    restart: yes
+  listen: restart node-exporter
+
+- name: Restart Alert Manager
+  docker_container:
+    name: alertmanager
+    restart: yes
+  listen: restart alertmanager
+
+- name: Restart Cadvisor
+  docker_container:
+    name: cadvisor
+    restart: yes
+  listen: restart cadvisor
+
+- name: Restart Prometheus
+  docker_container:
+    name: prometheus
+    restart: yes
+  listen: restart prometheus
+
+- name: Restart Grafana
+  docker_container:
+    name: grafana
+    restart: yes
+  listen: restart grafana

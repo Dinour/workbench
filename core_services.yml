@@ -1,0 +1,23 @@
+---
+- name: Deploy Core Services
+  hosts: servers
+  gather_facts: False
+  become: yes
+  roles:
+    - bitwarden
+    - cyberchef
+    - firefly
+    - freshrss
+    - chowdown
+    - grafana
+    - guacamole
+    - homeassistant
+    - huginn
+    - invoiceninja
+    - kutt
+    - minio
+    - podify
+    - pyload
+    - teedy
+    - vscode
+    - wallabag

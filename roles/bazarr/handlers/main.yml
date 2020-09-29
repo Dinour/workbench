@@ -1,0 +1,6 @@
+---
+    - name: Restart Bazarr
+      docker_container:
+        name: bazarr
+        restart: yes
+      listen: restart bazarr

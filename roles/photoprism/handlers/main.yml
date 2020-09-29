@@ -1,0 +1,6 @@
+---
+    - name: Restart Photoprism
+      docker_container:
+        name: photoprism
+        restart: yes
+      listen: restart photoprism

@@ -1,0 +1,85 @@
+---
+- name: Ensure Matrix Group exists
+  group:
+    gid: "991"
+    name: "matrix"
+    state: present
+  tags: matrix
+
+- name: Ensure Matrix User exists
+  user:
+    name: "matrix"
+    uid: "991"
+    create_home: no
+    group: "matrix"
+    shell: "/usr/sbin/nologin"
+    state: present
+  tags: matrix
+
+- name: Ensure Matrix base path exists
+  file:
+    path: "{{project_directory}}/synapse"
+    state: directory
+    owner: "991"
+    group: "991"
+  tags: matrix
+
+- name: Ensure Matrix Media Store Directory exists
+  file:
+    path: "{{project_directory}}/synapse/media_store"
+    state: directory
+    owner: "991"
+    group: "991"
+  tags: matrix
+
+- name: Ensure Matrix Upload Directory exists
+  file:
+    path: "{{project_directory}}/synapse/uploads"
+    state: directory
+    owner: "991"
+    group: "991"
+  tags: matrix
+
+- name: Ensure PostgreSQL Users are Present.
+  postgresql_user:
+    login_host: "{{postgres_host}}"
+    login_port: "{{postgres_port}}"
+    login_password: "{{postgres_root_password}}"
+    name: "{{matrix_database_user}}"
+    password: "{{matrix_database_password}}"
+    state: "present"
+  tags: matrix
+
+- name: Ensure PostgreSQL Databases are Present.
+  postgresql_db:
+    login_host: "{{postgres_host}}"
+    login_port: "{{postgres_port}}"
+    login_password: "{{postgres_root_password}}"
+    name: "{{matrix_database}}"
+    lc_collate: "C"
+    lc_ctype: "C"
+    template: "template0"
+    state: "present"
+  tags: matrix
+
+- name: Copy Signing Key
+  copy:
+    src: "authoritah.chat.signing.key"
+    dest: "{{project_directory}}/synapse/authoritah.chat.signing.key"
+  tags: matrix
+  no_log: true
+
+- name: Copy Chat Config
+  copy:
+    src: "authoritah.chat.log.config"
+    dest: "{{project_directory}}/synapse/authoritah.chat.log.config"
+  tags: matrix
+  no_log: true
+
+- name: Matrix Configuration Files
+  template:
+    src: homeserver.yaml.j2
+    dest: "{{project_directory}}/synapse/homeserver.yaml"
+  tags: matrix
+  no_log: true
+  notify: restart matrix

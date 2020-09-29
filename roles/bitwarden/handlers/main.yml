@@ -1,0 +1,6 @@
+---
+- name: Restart Bitwarden
+  docker_container:
+    name: bitwarden
+    restart: yes
+  listen: restart bitwarden

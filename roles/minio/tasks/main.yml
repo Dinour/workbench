@@ -1,0 +1,32 @@
+---
+- name: Ensure MinIO Directory Exist
+  file:
+    path: "{{project_directory}}/minio"
+    state: directory
+  tags: minio
+
+- name: Create MinIO Docker Container
+  docker_container:
+    name: minio
+    image: "minio/minio:{{minio_version}}"
+    pull: yes
+    hostname: minio
+    command: "server /data"
+    restart_policy: unless-stopped
+    env:
+      MINIO_ACCESS_KEY: "{{minio_access_key}}"
+      MINIO_SECRET_KEY: "{{minio_secret_key}}"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/minio:/data"
+    labels:
+      traefik.http.routers.minio.entrypoints: "websecure"
+      traefik.http.routers.minio.tls: "true"
+      traefik.http.routers.minio.rule: "Host(`s3.{{project_tld}}`)"
+      traefik.http.routers.minio.service: "minio"
+      traefik.http.services.minio.loadbalancer.server.port: "9000"
+      traefik.enable: "true"
+  tags: minio

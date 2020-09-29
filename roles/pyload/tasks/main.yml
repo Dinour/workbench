@@ -1,0 +1,41 @@
+---
+- name: Ensure Pyload Directory Exist
+  file:
+    path: "{{project_directory}}/pyload"
+    state: directory
+  tags: pyload
+
+- name: Ensure Pyload Configuration Files Exist
+  template:
+    src: "pyload.conf.j2"
+    dest: "{{project_directory}}/pyload/pyload.conf"
+  tags: pyload
+  no_log: true
+  notify: restart pyload
+
+- name: Create Pyload Docker Container
+  docker_container:
+    name: pyload
+    image: "linuxserver/pyload:{{pyload_version}}"
+    pull: yes
+    hostname: pyload
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/pyload/:/config"
+      - "{{media_directory}}/downloads/pyload:/downloads"
+    labels:
+      traefik.http.routers.pyload.entrypoints: "websecure"
+      traefik.http.routers.pyload.tls: "true"
+      traefik.http.routers.pyload.rule: "Host(`download.{{project_tld}}`)"
+      traefik.http.routers.pyload.service: "pyload"
+      traefik.http.services.pyload.loadbalancer.server.port: "8000"
+      traefik.enable: "true"
+  tags: pyload

@@ -1,0 +1,42 @@
+---
+- name: Ensure Teddy Directory Exist
+  file:
+    path: "{{project_directory}}/teedy"
+    state: directory
+  tags: teedy
+
+- import_tasks: roles/postgres/tasks/database_manager.yml
+  vars:
+    database_name: "{{teedy_database}}"
+    database_user: "{{teedy_database_user}}"
+    database_password: "{{teedy_database_password}}"
+  tags: teedy
+  no_log: true
+
+- name: Create Teedy Docker Container
+  docker_container:
+    name: teedy
+    image: "sismics/docs:{{teedy_version}}"
+    pull: yes
+    hostname: teedy
+    restart_policy: unless-stopped
+    env:
+      DOCS_BASE_URL: "https://docs.{{project_tld}}"
+      DATABASE_URL: "jdbc:postgresql://database:5432/{{teedy_database}}"
+      DATABASE_USER: "{{teedy_database_user}}"
+      DATABASE_PASSWORD: "{{teedy_database_password}}"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/teedy:/data"
+    labels:
+      traefik.http.routers.teedy.entrypoints: "websecure"
+      traefik.http.routers.teedy.tls: "true"
+      traefik.http.routers.teedy.rule: "Host(`docs.{{project_tld}}`)"
+      traefik.http.routers.teedy.middlewares: "default-headers@file"
+      traefik.http.routers.teedy.service: "teedy"
+      traefik.http.services.teedy.loadbalancer.server.port: "8080"
+      traefik.enable: "true"
+  tags: teedy

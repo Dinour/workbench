@@ -1,0 +1,6 @@
+---
+- name: Restart Homer
+  docker_container:
+    name: homer
+    restart: yes
+  listen: restart homer

@@ -1,0 +1,13 @@
+---
+- name: Init Wallabag Database
+  docker:
+    docker_extra_args: "docker exec wallabag /var/www/wallabag/bin/console wallabag:install --env=prod --no-interaction"
+    tags: wallabag
+- name: Insure Admin User is Activated
+  docker:
+    docker_extra_args: "docker exec wallabag /var/www/wallabag/bin/console fos:user:activate nx211 -e prod"
+    tags: wallabag
+- name: Create Admin User
+  docker:
+    docker_extra_args: "docker exec wallabag /var/www/wallabag/bin/console fos:user:promote nx211 admin -e prod"
+    tags: wallabag

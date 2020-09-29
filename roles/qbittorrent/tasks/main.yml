@@ -1,0 +1,56 @@
+---
+- name: Ensure qBittorrent Directory Exist
+  file:
+    path: "{{project_directory}}/qbittorrent"
+    state: directory
+    owner: "{{media_user}}"
+    group: "{{media_group}}"
+  tags: qbittorrent
+
+- name: Ensure qBittorrent Configuration Files Exist
+  template:
+    src: qBittorrent.conf.j2
+    dest: "{{project_directory}}/qbittorrent/qBittorrent.conf"
+  tags: qbittorrent
+  no_log: true
+  notify: restart qbittorrent
+
+- name: Create qBittorrent Docker Container
+  docker_container:
+    name: qbittorrent
+    image: "linuxserver/qbittorrent:{{qbittorrent_version}}"
+    pull: yes
+    hostname: qbittorrent
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+      UMASK_SET: "022"
+      WEBUI_PORT: "8090"
+    volumes:
+      - "{{project_directory}}/qbittorrent:/config"
+      - "{{media_directory}}/downloads:/media/downloads"
+    labels:
+      traefik.http.routers.qbittorrent.entrypoints: "websecure"
+      traefik.http.routers.qbittorrent.tls: "true"
+      traefik.http.routers.qbittorrent.rule: "Host(`qbittorrent.{{project_tld}}`)"
+      traefik.http.routers.qbittorrent.service: "qbittorrent"
+      traefik.http.services.qbittorrent.loadbalancer.server.port: "8090"
+      traefik.tcp.routers.torrent.entrypoints: "torrent"
+      traefik.tcp.routers.torrent.tls: "true"
+      traefik.tcp.routers.torrent.rule: "HostSNI(`qbittorrent.{{project_tld}}`)"
+      traefik.tcp.routers.torrent.service: "torrent"
+      traefik.tcp.services.torrent.loadbalancer.server.port: "6881"
+      traefik.udp.routers.bittorrent.entrypoints: "bittorrent"
+      traefik.udp.routers.bittorrent.service: "bittorrent"
+      traefik.udp.services.bittorrent.loadbalancer.server.port: "6881"
+      traefik.enable: "true"
+  tags: qbittorrent

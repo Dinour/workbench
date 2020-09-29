@@ -1,0 +1,5 @@
+---
+huginn_database: "huginn"
+huginn_database_user: "huginn"
+huginn_database_password: "{{vault_huginn_database_password}}"
+huginn_invitation_code: "{{vault_huginn_invitation_code}}"

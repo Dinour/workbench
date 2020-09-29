@@ -1,0 +1,6 @@
+---
+- name: Restart Sonarr
+  docker_container:
+    name: sonarr
+    restart: yes
+  listen: restart sonarr

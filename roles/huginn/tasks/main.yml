@@ -1,0 +1,48 @@
+---
+- import_tasks: roles/postgres/tasks/database_manager.yml
+  vars:
+    database_name: "{{huginn_database}}"
+    database_user: "{{huginn_database_user}}"
+    database_password: "{{huginn_database_password}}"
+  tags: huginn
+  no_log: true
+
+- name: Create Huginn Docker Container
+  docker_container:
+    name: huginn
+    image: "huginn/huginn:{{huginn_version}}"
+    pull: yes
+    hostname: huginn
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: absent
+    env:
+      DO_NOT_CREATE_DATABASE: "true"
+      DO_NOT_SEED: "true"
+      DATABASE_ADAPTER: "postgresql"
+      DATABASE_HOST: "database"
+      DATABASE_PORT: "5432"
+      HUGINN_DATABASE_NAME: "{{huginn_database}}"
+      HUGINN_DATABASE_USERNAME: "{{huginn_database_user}}"
+      HUGINN_DATABASE_PASSWORD: "{{huginn_database_password}}"
+      INVITATION_CODE: "{{huginn_invitation_code}}"
+      TIMEZONE: "{{default_timezone}}"
+      SMTP_USER_NAME: "{{email_user}}"
+      SMTP_PASSWORD: "{{email_password}}"
+      SMTP_SERVER: "{{email_host}}"
+      SMTP_PORT: "{{email_port}}"
+      SMTP_AUTHENTICATION: "plain"
+      SMTP_ENABLE_STARTTLS_AUTO: "true"
+      EMAIL_FROM_ADDRESS: "{{email_user}}"
+      SMTP_DOMAIN: "huginn.${DOMAIN}"
+      SEND_EMAIL_IN_DEVELOPMENT: "true"
+    labels:
+      traefik.http.routers.huginn.entrypoints: "websecure"
+      traefik.http.routers.huginn.tls: "true"
+      traefik.http.routers.huginn.rule: "Host(`huginn.{{project_tld}}`)"
+      traefik.http.services.huginn.loadbalancer.server.port: "3000"
+      traefik.http.routers.homer.service: "huginn"
+      traefik.enable: "true"
+  tags: huginn

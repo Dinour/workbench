@@ -1,0 +1,33 @@
+---
+- name: Create Registry Docker Container
+  docker_container:
+    name: registry
+    image: "registry:{{registry_version}}"
+    pull: yes
+    hostname: registry
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      REGISTRY_HTTP_ADDR: "0.0.0.0:5000"
+      REGISTRY_HTTP_DEBUG_ADDR: "0.0.0.0:5001"
+      REGISTRY_HTTP_SECRET: "{{docker_registry_secret}}"
+      REGISTRY_REDIS_ADDR: "redis:6379"
+      REGISTRY_NOTIFICATIONS_ENDPOINTS: >
+        - name: portus
+          url: http://portus:3000/v2/webhooks/events
+          timeout: 2000ms
+          threshold: 5
+          backoff: 1s
+    volumes:
+      - "{{project_directory}}/portus/registry:/var/lib/registry"
+    labels:
+      traefik.http.routers.registry.entrypoints: "websecure"
+      traefik.http.routers.registry.tls: "true"
+      traefik.http.routers.registry.rule: "Host(`registry.{{git_tld}}`)"
+      traefik.http.routers.registry.service: "registry"
+      traefik.http.services.registry.loadbalancer.server.port: "5000"
+      traefik.enable: "true"
+  tags: registry

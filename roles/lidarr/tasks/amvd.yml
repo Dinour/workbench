@@ -1,0 +1,40 @@
+---
+- name: Create AMVD Docker Container
+  docker_container:
+    name: amvd
+    image: "randomninjaatk/amvd:{{amvd_version}}"
+    pull: yes
+    hostname: amvd
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      UMASK_SET: "<022>"
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+      LIBRARY: "/media/downloads/music-videos"
+      AUTOSTART: "true"
+      usetidal: "false"
+      tidalusername: "TIDALUSERNAME"
+      tidalpassword: "TIDALPASSWORD"
+      RequireVideoMatch: "true"
+      videoformat: "--format bestvideo[vcodec*: avc1]+bestaudio"
+      subtitlelanguage: "en"
+      videofilter: "live"
+      FilePermissions: "666"
+      MBRAINZMIRROR: "https://musicbrainz.org"
+      MBRATELIMIT: "1"
+      LidarrUrl: "{{lidarr_url}}"
+      LidarrAPIkey: "{{lidarr_apikey}}"
+    volumes:
+      - "{{project_directory}}/lidarr:/config"
+      - "{{media_directory}}/music:/media/music"
+      - "{{media_directory}}/downloads/music-videos:/media/downloads/music-videos"
+      - /etc/localtime:/etc/localtime:ro
+  tags: amvd

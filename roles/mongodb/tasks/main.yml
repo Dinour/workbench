@@ -1,0 +1,26 @@
+---
+- name: Ensure MongoDB Directory Exist
+  file:
+    path: "{{project_directory}}/mongodb"
+    state: directory
+  tags: mongodb
+
+- name: Create MongoDB Docker Container
+  docker_container:
+    name: mongodb
+    hostname: mongodb
+    image: "mongo:{{mongodb_version}}"
+    pull: yes
+    restart_policy: unless-stopped
+    published_ports:
+      - 27017:27017
+    env:
+      MONGO_INITDB_ROOT_USERNAME: "{{mongo_initdb_root_username}}"
+      MONGO_INITDB_ROOT_PASSWORD: "{{mongo_initdb_root_password}}"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/mongodb:/data/db"
+  tags: mongodb

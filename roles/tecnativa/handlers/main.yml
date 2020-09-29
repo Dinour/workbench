@@ -1,0 +1,6 @@
+---
+- name: Restart Tecnativa
+  docker_container:
+    name: tecnativa
+    restart: yes
+  listen: restart tecnativa

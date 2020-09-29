@@ -1,0 +1,2 @@
+---
+digitalocean_token: "{{vault_digitalocean_token}}"

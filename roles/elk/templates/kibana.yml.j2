@@ -1,0 +1,11 @@
+---
+server.name: kibana
+server.host: "0"
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+elasticsearch.username: "{{elasticsearch_user}}"
+elasticsearch.password: "{{elasticsearch_password}}"
+xpack.security.encryptionKey: "{{kibana_security_encryption_key}}"
+xpack.security.session.idleTimeout: "10m"
+xpack.security.session.lifespan: "8h"
+xpack.security.secureCookies: "true"
+xpack.security.enabled: "true"

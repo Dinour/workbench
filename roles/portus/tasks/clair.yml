@@ -1,0 +1,16 @@
+---
+- name: Create Clair Docker Container
+  docker_container:
+    name: clair
+    image: "quay.io/coreos/clair:{{clair_version}}"
+    pull: yes
+    hostname: clair
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/clair/clair.yml:/clair.yml"
+      - /tmp:/tmp
+  tags: clair

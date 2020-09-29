@@ -1,0 +1,12 @@
+---
+- name: Restart Firefly
+  docker_container:
+    name: firefly
+    restart: yes
+  listen: restart firefly
+
+- name: Restart Firefly Importer
+  docker_container:
+    name: firefly-importer
+    restart: yes
+  listen: restart firefly-importer

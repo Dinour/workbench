@@ -1,0 +1,6 @@
+---
+- name: Restart MongoDB
+  docker_container:
+    name: mongodb
+    restart: yes
+  listen: restart mongodb

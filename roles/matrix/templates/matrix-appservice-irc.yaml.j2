@@ -1,0 +1,112 @@
+homeserver:
+  url: "https://{{chat_tld}}"
+  domain: "{{chat_tld}}"
+  enablePresence: true
+
+database:
+  engine: "postgres"
+  connectionString: "postgres://{{ircbridge_database_user}}:{{ircbridge_database_password}}@database:5432/{{ircbridge_database}}"
+
+ircService:
+  servers:
+    irc.{{chat_tld}}:
+      name: "ORG NAME"
+      icon: URL
+      port: 6697
+      ssl: false
+      sslselfsign: false
+      sasl: false
+      allowExpiredCerts: false
+      sendConnectionMessages: true
+      quitDebounce:
+        enabled: false
+        quitsPerSecond: 5
+        delayMinMs: 3600000 # 1h
+        delayMaxMs: 7200000 # 2h
+      modePowerMap:
+        o: 50
+        v: 1
+      botConfig:
+
+        enabled: true
+        nick: "MatrixBot"
+        joinChannelsIfNoUsers: true
+      privateMessages:
+        enabled: true
+        federate: true
+      dynamicChannels:
+        enabled: true
+        createAlias: true
+        published: true
+        joinRule: public
+        groupId: +myircnetwork:localhost
+        federate: true
+        aliasTemplate: "#irc_$CHANNEL"
+      membershipLists:
+        enabled: false
+        floodDelayMs: 10000
+
+        global:
+          ircToMatrix:
+            initial: false
+            incremental: false
+          matrixToIrc:
+            initial: false
+            incremental: false
+        rooms:
+          - room: "!fuasirouddJoxtwfge:localhost"
+            matrixToIrc:
+              initial: false
+              incremental: false
+        channels:
+          - channel: "#foo"
+            ircToMatrix:
+              initial: false
+              incremental: false
+      mappings:
+        "#thepub": ["!kieouiJuedJoxtVdaG:localhost"]
+      matrixClients:
+        userTemplate: "@irc_$NICK"
+        displayName: "$NICK (IRC)"
+        joinAttempts: -1
+      ircClients:
+        nickTemplate: "$DISPLAY[m]"
+        allowNickChanges: true
+        maxClients: 30
+        ipv6:
+        idleTimeout: 10800
+        reconnectIntervalMs: 5000
+        concurrentReconnectLimit: 50
+        lineLimit: 3
+
+  ident:
+    enabled: false
+    port: 1113
+    address: "::"
+
+  logging:
+    level: "debug"
+    logfile: "debug.log"
+    errfile: "errors.log"
+    toConsole: true
+    maxFiles: 5
+
+  metrics:
+    enabled: true
+    remoteUserAgeBuckets:
+      - "1h"
+      - "1d"
+      - "1w"
+  debugApi:
+    enabled: false
+    port: 11100
+  passwordEncryptionKeyPath: "passkey.pem"
+
+  matrixHandler:
+    eventCacheSize: 4096
+
+  ircHandler:
+    leaveConcurrency: 10
+    mapIrcMentionsToMatrix: "on" # This can be "on", "off", "force-off".
+advanced:
+  maxHttpSockets: 1000

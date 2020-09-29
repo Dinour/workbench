@@ -1,0 +1,30 @@
+---
+- name: Ensure LANcache DNS Directory Exist
+  file:
+    path: "{{project_directory}}/lancache/lancacge-dns"
+    state: directory
+  tags: lancache
+
+- name: Ensure LANcache DNS Configuration Files Exist
+  template:
+    src: lancache_env.j2
+    dest: "{{project_directory}}/lancache/lancache-dns//.env"
+  notify: restart lancache-dns
+  no_log: true
+  tags: lancache
+
+- name: Create LANcache DNS Docker Container
+  docker_container:
+    name: lancache-dns
+    image: "lancachenet/lancache-dns:{{lancache-dns_version}}"
+    pull: yes
+    hostname: lancache-dns
+    restart_policy: unless-stopped
+    env_file: "{{project_directory}}/lancache/lancache-dns/.env"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: absent
+    volumes:
+      - "{{project_directory}}/lancache/lancache-dns:/data"
+  tags: lancache

@@ -1,0 +1,6 @@
+---
+- name: Restart Jackett
+  docker_container:
+    name: jackett
+    restart: yes
+  listen: restart jackett

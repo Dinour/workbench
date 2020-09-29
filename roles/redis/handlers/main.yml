@@ -1,0 +1,6 @@
+---
+- name: Restart Redis
+  docker_container:
+    name: redis
+    restart: yes
+  listen: restart redis

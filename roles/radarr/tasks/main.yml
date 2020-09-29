@@ -1,0 +1,49 @@
+---
+- name: Ensure Radarr Directory Exist
+  file:
+    path: "{{project_directory}}/radarr"
+    state: directory
+  tags: radarr
+
+- name: Ensure Radarr Configuration Files Exist
+  template:
+    src: "config.xml.j2"
+    dest: "{{project_directory}}/radarr/config.xml"
+  tags: radarr
+  no_log: true
+  notify: restart radarr
+
+- name: Create Radarr Docker Container
+  docker_container:
+    name: radarr
+    image: "linuxserver/radarr:{{radarr_version}}"
+    pull: yes
+    hostname: radarr
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/radarr:/config"
+      - "{{media_directory}}/movies:/media/movies"
+      - "{{media_directory}}/fights:/media/fights"
+      - "{{media_directory}}/kids:/media/kids"
+      - "{{media_directory}}/downloads:/media/downloads"
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.radarr.entrypoints: "websecure"
+      traefik.http.routers.radarr.tls: "true"
+      traefik.http.routers.radarr.rule: "Host(`radarr.{{project_tld}}`)"
+      traefik.http.routers.radarr.middlewares: "default-headers@file"
+      traefik.http.routers.radarr.service: "radarr"
+      traefik.http.services.radarr.loadbalancer.server.port: "7878"
+      traefik.enable: "true"
+  tags: radarr

@@ -1,0 +1,6 @@
+---
+- name: Restart Lidarr
+  docker_container:
+    name: lidarr
+    restart: yes
+  listen: restart lidarr

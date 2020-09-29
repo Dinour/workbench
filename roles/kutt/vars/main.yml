@@ -1,0 +1,5 @@
+---
+kutt_database_user: "kutt"
+kutt_database_password: "{{vault_kutt_database_password}}"
+kutt_database: "kutt"
+kutt_jwt_secret: "{{vault_kutt_jwt_secret}}"

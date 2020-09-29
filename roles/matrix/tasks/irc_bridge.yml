@@ -1,0 +1,35 @@
+---
+- name: Ensure Matrix IRC Bridge Directory Exist
+  file:
+    path: "{{project_directory}}/synapse/irc-bridge"
+    state: directory
+  tags:
+    - ircbridge
+    - irc
+
+- import_tasks: roles/postgres/tasks/database_manager.yml
+  vars:
+    database_name: "{{ircbridge_database}}"
+    database_user: "{{ircbridge_database_user}}"
+    database_password: "{{ircbridge_database_password}}"
+  no_log: true
+  tags:
+    - ircbridge
+    - irc
+
+- name: Create Matrix IRC Bridge Docker Container
+  docker_container:
+    name: irc-bridge
+    image: "matrixdotorg/matrix-appservice-irc:{{irc_bridge_version}}"
+    pull: yes
+    hostname: ircbridge
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: absent
+    volumes:
+      - "{{project_directory}}/synapse/irc-bridge:/irc-config.yaml"
+  tags:
+    - ircbridge
+    - irc

@@ -1,0 +1,6 @@
+---
+    - name: Restart Chow Down
+      docker_container:
+        name: chowdown
+        restart: yes
+      listen: restart chowdown

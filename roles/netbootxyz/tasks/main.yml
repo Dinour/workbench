@@ -1,0 +1,71 @@
+---
+- name: Ensure group NetBootxyz exists
+  group:
+    name: netboot
+    gid: 1040
+    state: present
+
+- name: Ensure NetBootxyz User Exist
+  user:
+    name: netboot
+    comment: "NetBootxyz"
+    system: yes
+    uid: 1040
+    group: netboot
+    groups:
+      - docker
+
+- name: Ensure NetBootxyz Directory Exist
+  file:
+    path: "{{project_directory}}/netbootxyz"
+    state: directory
+    owner: "netboot"
+    group: "netboot"
+  tags: netbootxyz
+
+- name: Ensure NetBootxyz Image Directory Exist
+  file:
+    path: "{{media_directory}}/images"
+    state: directory
+    owner: "netboot"
+    group: "netboot"
+  tags: netbootxyz
+
+- name: Create NetBootxyz Docker Container
+  docker_container:
+    name: netbootxyz
+    image: "linuxserver/netbootxyz:{{netbootxyz_version}}"
+    pull: yes
+    hostname: netbootxyz
+    user: "root"
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    restart_policy: unless-stopped
+    env:
+      PUID: "1040"
+      PGID: "1040"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/netbootxyz:/config"
+      - "{{media_directory}}/images:/assets"
+    labels:
+      traefik.http.routers.netbootxyz.entrypoints: "websecure"
+      traefik.http.routers.netbootxyz.tls: "true"
+      traefik.http.routers.netbootxyz.rule: "Host(`pxe.{{project_tld}}`)"
+      traefik.http.routers.netbootxyz.service: "netbootxyz"
+      traefik.http.services.netbootxyz.loadbalancer.server.port: "80"
+      traefik.http.routers.netbootadmin.entrypoints: "websecure"
+      traefik.http.routers.netbootadmin.tls: "true"
+      traefik.http.routers.netbootadmin.rule: "Host(`netboot.{{project_tld}}`)"
+      traefik.http.routers.netbootadmin.middlewares: "default-headers@file,netbootxyz-auth@file"
+      traefik.http.routers.netbootadmin.service: "netbootadmin"
+      traefik.http.services.netbootadmin.loadbalancer.server.port: "3000"
+      traefik.udp.routers.netboot.entrypoints: "netboot"
+      traefik.udp.routers.netboot.service: "netboot"
+      traefik.udp.services.netboot.loadbalancer.server.port: "69"
+      traefik.enable: "true"
+  tags: netbootxyz

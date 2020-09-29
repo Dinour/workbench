@@ -1,0 +1,6 @@
+---
+    - name: Restart Gitea
+      docker_container:
+        name: gitea
+        restart: yes
+      listen: restart gitea

@@ -1,0 +1,50 @@
+---
+- name: Ensure Firefly Directory Exist
+  file:
+    path: "{{project_directory}}/firefly"
+    state: directory
+  tags: firefly
+
+- import_tasks: roles/postgres/tasks/database_manager.yml
+  vars:
+    database_name: "{{firefly_database}}"
+    database_user: "{{firefly_database_user}}"
+    database_password: "{{firefly_database_password}}"
+  tags: firefly
+
+- name: Ensure Firefly Configuration Files Exist
+  template:
+    src: env.j2
+    dest: "{{project_directory}}/firefly//.env"
+  tags: firefly
+  no_log: true
+  notify: restart firefly
+
+- name: Create Firefly Docker Container
+  docker_container:
+    name: firefly
+    image: "jc5x/firefly-iii:{{firefly_version}}"
+    pull: yes
+    hostname: firefly
+    restart_policy: unless-stopped
+    env_file: "{{project_directory}}/firefly/.env"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/firefly/export:/var/www/firefly-iii/storage/export"
+      - "{{project_directory}}/firefly/upload:/var/www/firefly-iii/storage/upload"
+    labels:
+      traefik.http.routers.firefly.entrypoints: "websecure"
+      traefik.http.routers.firefly.tls: "true"
+      traefik.http.routers.firefly.rule: "Host(`firefly.{{project_tld}}`)"
+      traefik.http.routers.firefly.middlewares: "default-headers@file"
+      traefik.http.routers.firefly.service: "firefly"
+      traefik.http.services.firefly.loadbalancer.server.port: "8080"
+      traefik.enable: "true"
+  tags: firefly
+
+- import_tasks: "{{role_path}}/tasks/importer.yml"
+  tags:
+    - firefly

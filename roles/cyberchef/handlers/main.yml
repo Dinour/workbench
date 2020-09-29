@@ -1,0 +1,6 @@
+---
+    - name: Restart CyberChef
+      docker_container:
+        name: cyberchef
+        restart: yes
+      listen: restart cyberchef

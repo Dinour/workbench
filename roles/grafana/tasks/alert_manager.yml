@@ -1,0 +1,43 @@
+---
+- name: Ensure Alert Manager Directory Exist
+  file:
+    path: "{{project_directory}}/grafana/alertmanager"
+    state: directory
+  tags:
+    - alertmanager
+    - prometheus
+    - grafana
+
+- name: Ensure Alert Manager Configuration Files Exist
+  template:
+    src: alertmanager.yml.j2
+    dest: "{{project_directory}}/grafana/alertmanager/config.yml"
+  notify: restart alertmanager
+  no_log: true
+  tags:
+    - alertmanager
+    - prometheus
+    - grafana
+
+- name: Create Alert Manager Docker Container
+  docker_container:
+    name: alertmanager
+    image: "prom/alertmanager:{{grafana_stack_version}}"
+    pull: yes
+    hostname: alertmanager
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    command:
+      --config.file=/etc/alertmanager/config.yml
+      --storage.path=/alertmanager
+      --cluster.advertise-address=127.0.0.1:9093
+      --web.listen-address=localhost:9093
+    volumes:
+      - "{{project_directory}}/grafana/alertmanager/:/etc/alertmanager/"
+  tags:
+    - alertmanager
+    - prometheus
+    - grafana

@@ -1,0 +1,6 @@
+---
+- name: Restart Hydra
+  docker_container:
+    name: hydra
+    restart: yes
+  listen: restart hydra

@@ -1,0 +1,28 @@
+---
+- name: Ensure mariadb Directory Exist
+  file:
+    path: "{{project_directory}}/mariadb"
+    state: directory
+  tags: mariadb
+
+- name: Create mariadb Docker Container
+  docker_container:
+    name: database2
+    image: "linuxserver/mariadb:{{mariadb_version}}"
+    pull: yes
+    hostname: database2
+    published_ports:
+      - 3306:3306
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{mariadb_user}}"
+      PGID: "{{mariadb_group}}"
+      MYSQL_ROOT_PASSWORD: "{{mariadb_root_password}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/mariadb:/config"
+  tags: mariadb

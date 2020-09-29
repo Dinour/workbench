@@ -1,0 +1,46 @@
+---
+- name: Ensure Sabnzbd Directory Exist
+  file:
+    path: "{{project_directory}}/sabnzbd"
+    state: directory
+  tags: sabnzbd
+
+- name: Ensure Sabnzbd Configuration Files Exist
+  template:
+    src: sabnzbd.ini.j2
+    dest: "{{project_directory}}/sabnzbd/sabnzbd.ini"
+  notify: restart sabnzbd
+  no_log: true
+  tags: sabnzbd
+
+- name: Create Sabnzbd Docker Container
+  docker_container:
+    name: sabnzbd
+    image: "linuxserver/sabnzbd:{{sabnzbd_version}}"
+    pull: yes
+    hostname: sabnzbd
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/sabnzbd:/config"
+      - "{{media_directory}}/downloads/:/media/downloads"
+      - "{{media_directory}}/downloads/incomplete:/media/downloads/incomplete"
+    labels:
+      traefik.http.routers.sabnzbd.entrypoints: "websecure"
+      traefik.http.routers.sabnzbd.tls: "true"
+      traefik.http.routers.sabnzbd.rule: "Host(`sabnzbd.{{project_tld}}`)"
+      traefik.http.routers.sabnzbd.middlewares: "default-headers@file"
+      traefik.http.routers.sabnzbd.service: "sabnzbd"
+      traefik.http.services.sabnzbd.loadbalancer.server.port: "8080"
+      traefik.enable: "true"
+  tags: sabnzbd

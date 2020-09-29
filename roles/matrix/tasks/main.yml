@@ -1,0 +1,40 @@
+---
+- import_tasks: "{{role_path}}/tasks/init.yml"
+  tags:
+    - matrix
+
+- name: Create Matrix Docker Container
+  docker_container:
+    name: synapse
+    image: "docker.io/matrixdotorg/synapse:{{matrix_version}}"
+    pull: yes
+    hostname: synapse
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      UID: "991"
+      GID: "991"
+      TZ: "{{default_timezone}}"
+      SYNAPSE_CONFIG_PATH: /data/homeserver.yaml
+    volumes:
+      - "{{project_directory}}/synapse:/data:rw"
+    labels:
+      traefik.http.routers.synapse.entrypoints: "websecure"
+      traefik.http.routers.synapse.tls: "true"
+      traefik.http.routers.synapse.rule: "Host(`{{chat_tld}}`)"
+      traefik.http.routers.synapse.middlewares: "default-headers@file"
+      traefik.http.routers.synapse.service: "synapse"
+      traefik.http.services.synapse.loadbalancer.server.port: "8008"
+      traefik.enable: "true"
+  tags: matrix
+
+- import_tasks: "{{role_path}}/tasks/identity_server.yml"
+  tags:
+    - matrix
+
+- import_tasks: "{{role_path}}/tasks/element.yml"
+  tags:
+    - matrix

@@ -1,0 +1,42 @@
+---
+- name: Ensure Filebeat Directory Exist
+  file:
+    path: "{{project_directory}}/elasticsearch/filebeat"
+    state: directory
+  tags:
+    - filebeat
+    - elk
+
+- name: Ensure Filebeat Configuration Files Exist
+  template:
+    src: filebeat.docker.yml.j2
+    dest: "{{project_directory}}/elasticsearch/filebeat/filebeat.docker.yml"
+  notify: restart filebeat
+  no_log: true
+  tags:
+    - filebeat
+    - elk
+
+- name: Create Filebeat Docker Container
+  docker_container:
+    name: filebeat
+    user: "root"
+    hostname: filebeat
+    image: "docker.elastic.co/beats/filebeat:{{elk_stack_version}}"
+    pull: yes
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      strict.perms: "false"
+      output.elasticsearch.hosts: "[elasticsearch:9200]"
+      setup.kibana.host: "kibana:5601"
+    volumes:
+      - "{{project_directory}}/elasticsearch/filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro"
+      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  tags:
+    - filebeat
+    - elk

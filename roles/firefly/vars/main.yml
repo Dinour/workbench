@@ -1,0 +1,5 @@
+---
+firefly_database_user: "firefly"
+firefly_database_password: "{{vault_firefly_database_password}}"
+firefly_database: "firefly"
+firefly_access_token: "{{vault_firefly_access_token}}"

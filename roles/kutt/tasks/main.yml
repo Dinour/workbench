@@ -1,0 +1,64 @@
+---
+- import_tasks: roles/postgres/tasks/database_manager.yml
+  vars:
+    database_name: "{{kutt_database}}"
+    database_user: "{{kutt_database_user}}"
+    database_password: "{{kutt_database_password}}"
+  tags: kutt
+  no_log: true
+
+- name: Adds UUID Extension to the Kutt Database
+  postgresql_ext:
+    name: uuid-ossp
+    db: kutt
+    login_host: "{{postgres_host}}"
+    login_port: "{{postgres_port}}"
+    login_password: "{{postgres_root_password}}"
+    cascade: true
+  tags: kutt
+
+- name: Create Kutt Docker Container
+  docker_container:
+    name: kutt
+    image: "kutt/kutt:{{kutt_version}}"
+    pull: yes
+    hostname: kutt
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    env:
+      SITE_NAME: "Authoritah"
+      DEFAULT_DOMAIN: "{{kutt_tld}}"
+      PORT: "3000"
+      LINK_LENGTH: "6"
+      DB_HOST: "database"
+      DB_NAME: "{{kutt_database}}"
+      DB_USER: "{{kutt_database_user}}"
+      DB_PASSWORD: "{{kutt_database_password}}"
+      ADMIN_EMAILS: "nx211@{{project_tld}}"
+      REPORT_EMAIL: "abuse@{{project_tld}}"
+      CONTACT_EMAIL: "contact@{{project_tld}}"
+      JWT_SECRET: "{{kutt_jwt_secret}}"
+      REDIS_HOST: "{{redis_host}}"
+      REDIS_PORT: "{{redis_port}}"
+      MAIL_HOST: "{{email_host}}"
+      MAIL_PORT: "465"
+      MAIL_SECURE: "true"
+      MAIL_USER: "{{email_user}}"
+      MAIL_FROM: "{{email_user}}"
+      MAIL_PASSWORD: "{{email_password}}"
+      RECAPTCHA_SITE_KEY: ""
+      RECAPTCHA_SECRET_KEY: ""
+      DISALLOW_ANONYMOUS_LINKS: "true"
+      DISALLOW_REGISTRATION: "true"
+    networks_cli_compatible: yes
+    state: started
+    labels:
+      traefik.http.routers.kutt.entrypoints: "websecure"
+      traefik.http.routers.kutt.tls: "true"
+      traefik.http.routers.kutt.rule: "Host(`{{kutt_tld}}`)"
+      traefik.http.routers.kutt.middlewares: "default-headers@file"
+      traefik.http.routers.kutt.service: "kutt"
+      traefik.http.services.kutt.loadbalancer.server.port: "3000"
+      traefik.enable: "true"
+  tags: kutt

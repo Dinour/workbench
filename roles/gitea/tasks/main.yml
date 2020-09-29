@@ -1,0 +1,43 @@
+---
+- name: Ensure Gitea Directory Exist
+  file:
+    path: "{{project_directory}}/gitea"
+    state: directory
+  tags: gitea
+
+- import_tasks: roles/postgres/tasks/database_manager.yml
+  vars:
+    database_name: "{{gitea_database}}"
+    database_user: "{{gitea_database_user}}"
+    database_password: "{{gitea_database_password}}"
+  tags: gitea
+  no_log: true
+
+- name: Create Gitea Docker Container
+  docker_container:
+    name: gitea
+    image: "gitea/gitea:{{gitea_version}}"
+    pull: yes
+    hostname: gitea
+    restart_policy: unless-stopped
+    published_ports:
+      - "2222:22"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      USER_UID: "1000"
+      USER_GID: "1000"
+    volumes:
+      - "{{project_directory}}/gitea:/data"
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      traefik.http.routers.gitea.entrypoints: "websecure"
+      traefik.http.routers.gitea.tls: "true"
+      traefik.http.routers.gitea.rule: "Host(`{{git_tld}}`)"
+      traefik.http.routers.gitea.service: "gitea"
+      traefik.http.services.gitea.loadbalancer.server.port: "3000"
+      traefik.enable: "true"
+  tags: gitea

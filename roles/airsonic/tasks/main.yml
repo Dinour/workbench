@@ -1,0 +1,47 @@
+---
+- name: Ensure Airsonic Directory Exist
+  file:
+    path: "{{project_directory}}/airsonic"
+    state: directory
+  tags: airsonic
+
+- name: Ensure Airsonic Configuration Files Exist
+  template:
+    src: airsonic.properties.j2
+    dest: "{{project_directory}}/airsonic/airsonic.properties"
+  tags: airsonic
+  notify: restart airsonic
+  no_log: true
+
+- name: Create Airsonic Docker Container
+  docker_container:
+    name: airsonic
+    image: "linuxserver/airsonic:{{airsonic_version}}"
+    pull: yes
+    hostname: airsonic
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    env:
+      TZ: "{{default_timezone}}"
+      CONTEXT_PATH: "/"
+      JAVA_OPTS: "-Dserver.use-forward-headers=true"
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    volumes:
+      - "{{project_directory}}/airsonic:/config"
+      - "{{media_directory}}/music:/music"
+      - "{{media_directory}}/playlists:/playlists"
+      - "{{media_directory}}/podcasts:/podcasts"
+    labels:
+      traefik.http.routers.airsonic.entrypoints: "websecure"
+      traefik.http.routers.airsonic.tls: "true"
+      traefik.http.routers.airsonic.rule: "Host(`music.{{project_tld}}`)"
+      traefik.http.routers.airsonic.middlewares: "default-headers@file"
+      traefik.http.routers.airsonic.service: "airsonic"
+      traefik.http.services.airsonic.loadbalancer.server.port: "4040"
+      traefik.enable: "true"
+  tags: airsonic

@@ -1,0 +1,45 @@
+---
+- name: Ensure Jellyfin Directory Exist
+  file:
+    path: "{{project_directory}}/jellyfin"
+    state: directory
+    owner: "{{media_user}}"
+    group: "{{media_group}}"
+  tags: jellyfin
+
+- name: Create Jellyfin Docker Container
+  docker_container:
+    name: jellyfin
+    hostname: jellyfin
+    image: "linuxserver/jellyfin:{{jellyfin_version}}"
+    pull: yes
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    published_ports:
+      - 8096:8096
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/jellyfin:/config"
+      - "{{media_directory}}/movies:/data/movies"
+      - "{{media_directory}}/tv:/data/tv"
+      - "{{media_directory}}/fights:/data/fights"
+      - "{{media_directory}}/music:/data/music"
+      - "{{media_directory}}/anime:/media/anime"
+      - "{{media_directory}}/kids:/data/kids"
+    labels:
+      traefik.http.routers.jellyfin.entrypoints: "websecure"
+      traefik.http.routers.jellyfin.tls: "true"
+      traefik.http.routers.jellyfin.rule: "Host(`{{jellyfin_tld}}`)"
+      traefik.http.routers.jellyfin.service: "jellyfin"
+      traefik.http.services.jellyfin.loadbalancer.server.port: "8096"
+      traefik.enable: "true"
+  tags: jellyfin

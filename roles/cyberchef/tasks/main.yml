@@ -1,0 +1,22 @@
+---
+- name: Create CyberChef Docker Container
+  docker_container:
+    name: cyberchef
+    image: "mpepping/cyberchef:{{cyberchef_version}}"
+    pull: yes
+    hostname: cyberchef
+    restart_policy: unless-stopped
+    privileged: yes
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    labels:
+      traefik.http.routers.cyberchef.entrypoints: "websecure"
+      traefik.http.routers.cyberchef.tls: "true"
+      traefik.http.routers.cyberchef.rule: "Host(`cyberchef.{{project_tld}}`)"
+      traefik.http.routers.cyberchef.middlewares: "default-headers@file"
+      traefik.http.routers.cyberchef.service: "cyberchef"
+      traefik.http.services.cyberchef.loadbalancer.server.port: "8000"
+      traefik.enable: "true"
+  tags: cyberchef

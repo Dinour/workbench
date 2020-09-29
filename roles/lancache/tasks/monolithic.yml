@@ -1,0 +1,31 @@
+---
+- name: Ensure Monolithic Directory Exist
+  file:
+    path: "{{project_directory}}/lancache/monolithic"
+    state: directory
+  tags: lancache
+
+- name: Ensure Monolithic Configuration Files Exist
+  template:
+    src: monolithic_env.j2
+    dest: "{{project_directory}}/lancache/monolithic//.env"
+  notify: restart monolithic
+  no_log: true
+  tags: lancache
+
+- name: Create Monolithic Docker Container
+  docker_container:
+    name: monolithic
+    image: "{{registry_host}}/{{registry_username}}/docker-monolithic:{{monolithic_version}}"
+    pull: yes
+    hostname: monolithic
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: absent
+    env_file: "{{project_directory}}/lancache/lancache-dns/.env"
+    volumes:
+      - "{{project_directory}}/monolithic/cache:/data/cache"
+      - "{{project_directory}}/monolithic/logs:/data/logs"
+  tags: lancache

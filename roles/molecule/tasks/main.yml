@@ -1,0 +1,16 @@
+---
+- name: Create Molecule Docker Container
+  docker_container:
+    name: molecule
+    image: "quay.io/ansible/molecule:{{molecule_version}}"
+    pull: yes
+    hostname: molecule
+    privileged: yes
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    state: absent
+  tags: molecule

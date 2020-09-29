@@ -1,0 +1,6 @@
+---
+- name: Restart Pyload
+  docker_container:
+    name: pyload
+    restart: yes
+  listen: restart pyload

@@ -1,0 +1,44 @@
+---
+- name: Ensure Prometheus Directory Exist
+  file:
+    path: "{{project_directory}}/grafana/prometheus"
+    state: directory
+  tags:
+    - prometheus
+    - grafana
+
+- name: Ensure Prometheus Configuration Files Exist
+  template:
+    src: prometheus.yml.j2
+    dest: "{{project_directory}}/grafana/prometheus/prometheus.yml"
+  notify: restart prometheus
+  no_log: true
+  tags:
+    - prometheus
+    - grafana
+
+- name: Create Prometheus Docker Container
+  docker_container:
+    name: prometheus
+    image: "prom/prometheus:{{grafana_stack_version}}"
+    pull: yes
+    hostname: prometheus
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+        links:
+          - cadvisor:cadvisor
+          - alertmanager:alertmanager
+    networks_cli_compatible: yes
+    state: started
+    command:
+      --config.file=/etc/prometheus/prometheus.yml
+      --storage.tsdb.path=/prometheus
+      --web.console.libraries=/usr/share/prometheus/console_libraries
+      --web.console.templates=/usr/share/prometheus/consoles
+    volumes:
+      - "{{project_directory}}/grafana/prometheus/:/etc/prometheus/"
+      - prometheus:/prometheus
+  tags:
+    - prometheus
+    - grafana

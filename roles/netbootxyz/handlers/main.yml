@@ -1,0 +1,6 @@
+---
+- name: Restart NetBootxyz
+  docker_container:
+    name: netbootxyz
+    restart: yes
+  listen: restart netbootxyz

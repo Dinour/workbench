@@ -1,0 +1,7 @@
+---
+portus_database_user: "portus"
+portus_database_password: "{{vault_portus_database_password}}"
+portus_database: "portus"
+portus_secret_key_base: "{{vault_portus_secret_key_base}}"
+portus_user_password: "{{vault_portus_user_password}}"
+docker_registry_secret: "{{vault_docker_registry_secret}}"

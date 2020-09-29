@@ -1,0 +1,12 @@
+---
+- name: Restart FreshRSS
+  docker_container:
+    name: freshrss
+    restart: yes
+  listen: restart freshrss
+
+- name: Restart RSS-Bridge
+  docker_container:
+    name: rssbridge
+    restart: yes
+  listen: restart rssbridge

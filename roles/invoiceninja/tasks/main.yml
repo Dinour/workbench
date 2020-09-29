@@ -1,0 +1,58 @@
+---
+- name: Ensure Invoice Ninja Directory Exist
+  file:
+    path: "{{project_directory}}/invoiceninja"
+    state: directory
+  tags: invoiceninja
+
+- import_tasks: roles/mariadb/tasks/database_manager.yml
+  vars:
+    database_name: "{{invoiceninja_database}}"
+    database_user: "{{invoiceninja_database_user}}"
+    database_password: "{{invoiceninja_database_password}}"
+  tags: invoiceninja
+  no_log: true
+
+- name: Create Invoice Ninja Docker Container
+  docker_container:
+    name: invoiceninja
+    image: "invoiceninja/invoiceninja:{{invoiceninja_version}}"
+    pull: yes
+    hostname: invoiceninja
+    restart_policy: unless-stopped
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: absent
+    env:
+      APP_ENV: "production"
+      APP_DEBUG: 0
+      APP_URL: "{{invoiceninja_app_url}}"
+      APP_KEY: "{{invoiceninja_application_key}}"
+      APP_CIPHER: "AES-256-CBC"
+      DB_TYPE: "mysql"
+      APP_LOCALE: "en"
+      DB_STRICT: "false"
+      DB_HOST: "database"
+      DB_DATABASE: "{{invoiceninja_database}}"
+      DB_USERNAME: "{{invoiceninja_database_user}}"
+      DB_PASSWORD: "{{invoiceninja_database_password}}"
+      MAIL_DRIVER: "smtp"
+      MAIL_PORT: "{{email_port}}"
+      MAIL_ENCRYPTION: "tls"
+      MAIL_HOST: "{{email_host}}"
+      MAIL_USERNAME: "{{email_user}}"
+      MAIL_FROM_ADDRESS: "{{email_user}}"
+      MAIL_FROM_NAME: "{{email_user}}"
+      MAIL_PASSWORD: "{{email_password}}"
+    volumes:
+      - "{{project_directory}}/invoiceninja/public:/var/app/public"
+      - "{{project_directory}}/invoiceninja/storage:/var/app/storage"
+    labels:
+      traefik.http.routers.invoiceninja.entrypoints: "websecure"
+      traefik.http.routers.invoiceninja.tls: "true"
+      traefik.http.routers.invoiceninja.rule: "Host(`invoice.{{project_tld}}`)"
+      traefik.http.routers.invoiceninja.service: "invoiceninja"
+      traefik.http.services.invoiceninja.loadbalancer.server.port: "9000"
+      traefik.enable: "true"
+  tags: invoiceninja

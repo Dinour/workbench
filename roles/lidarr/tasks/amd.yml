@@ -1,0 +1,40 @@
+---
+- name: Create AMD Docker Container
+  docker_container:
+    name: amd
+    image: "randomninjaatk/amd:{{amd_version}}"
+    pull: yes
+    hostname: amd
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      UMASK_SET: "<022>"
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+      AUTOSTART: "true"
+      LIST: "both"
+      SearchType: "both"
+      Concurrency: "1"
+      quality: "FLAC"
+      requirequality: "true"
+      MatchDistance: "10"
+      replaygain: "true"
+      FolderPermissions: "766"
+      FilePermissions: "666"
+      MBRAINZMIRROR: "https://musicbrainz.org"
+      MBRATELIMIT: "1"
+      LidarrUrl: "{{lidarr_url}}"
+      LidarrAPIkey: "{{lidarr_apikey}}"
+      ARL_TOKEN: "{{lidarr_arl_token}}"
+    volumes:
+      - "{{project_directory}}/lidarr:/config"
+      - "{{media_directory}}/downloads/music:/downloads-amd"
+      - /etc/localtime:/etc/localtime:ro
+  tags: amd

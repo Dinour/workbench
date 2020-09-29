@@ -1,0 +1,6 @@
+---
+- name: Restart Traefik
+  docker_container:
+    name: traefik
+    restart: yes
+  listen: restart traefik

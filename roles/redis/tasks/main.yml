@@ -1,0 +1,17 @@
+---
+- name: Create Redis Docker Container
+  docker_container:
+    name: redis
+    image: "redis:{{redis_version}}"
+    pull: yes
+    hostname: redis
+    comparisons:
+      '*': strict
+    restart_policy: unless-stopped
+    networks_cli_compatible: yes
+    networks:
+      - name: proxy
+    state: started
+    volumes:
+      - "{{project_directory}}/redis:/data"
+  tags: redis

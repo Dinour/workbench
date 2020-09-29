@@ -1,0 +1,49 @@
+---
+- name: Ensure Bazarr Directory Exist
+  file:
+    path: "{{project_directory}}/bazarr"
+    state: directory
+  tags: bazarr
+
+- name: Ensure Bazarr Configuration Files Exist
+  template:
+    src: config.ini.j2
+    dest: "{{project_directory}}/bazarr/config/config.ini"
+  notify: restart bazarr
+  tags: bazarr
+  no_log: true
+
+- name: Create Bazarr Docker Container
+  docker_container:
+    name: bazarr
+    image: "linuxserver/bazarr:{{bazarr_version}}"
+    pull: yes
+    hostname: bazarr
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/bazarr:/config"
+      - "{{media_directory}}/movies:/media/movies"
+      - "{{media_directory}}/tv:/media/tv"
+      - "{{media_directory}}/kids:/media/kids"
+      - "{{media_directory}}/anime:/media/anime"
+    labels:
+      traefik.http.routers.bazarr.entrypoints: "websecure"
+      traefik.http.routers.bazarr.tls: "true"
+      traefik.http.routers.bazarr.rule: "Host(`bazarr.{{project_tld}}`)"
+      traefik.http.middlewares.bazarr-refer-header.headers.referrerPolicy: "strict-origin-when-cross-origin"
+      traefik.http.routers.bazarr.middlewares: "bazarr-refer-header"
+      traefik.http.routers.bazarr.service: "bazarr"
+      traefik.http.services.bazarr.loadbalancer.server.port: "6767"
+      traefik.enable: "true"
+  tags: bazarr

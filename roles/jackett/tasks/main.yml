@@ -1,0 +1,47 @@
+---
+- name: Ensure Jackett Directory Exist
+  file:
+    path: "{{project_directory}}/jackett"
+    state: directory
+    owner: "{{media_user}}"
+    group: "{{media_group}}"
+  tags: jackett
+
+- name: Ensure Jackett Configuration Files Exist
+  template:
+    src: ServerConfig.json.j2
+    dest: "{{project_directory}}/jackett/Jackett/ServerConfig.json"
+  notify: restart jackett
+  no_log: true
+  tags: jackett
+
+- name: Create Jackett Docker Container
+  docker_container:
+    name: jackett
+    image: "linuxserver/jackett:{{jackett_version}}"
+    pull: yes
+    hostname: jackett
+    restart_policy: unless-stopped
+    comparisons:
+      labels: allow_more_present
+      '*': strict
+    networks:
+      - name: proxy
+    networks_cli_compatible: yes
+    state: started
+    env:
+      PUID: "{{media_user}}"
+      PGID: "{{media_group}}"
+      TZ: "{{default_timezone}}"
+    volumes:
+      - "{{project_directory}}/jackett:/config"
+      - "{{media_directory}}/downloads:/downloads"
+    labels:
+      traefik.http.routers.jackett.entrypoints: "websecure"
+      traefik.http.routers.jackett.tls: "true"
+      traefik.http.routers.jackett.rule: "Host(`jackett.{{project_tld}}`)"
+      traefik.http.routers.jackett.middlewares: "default-headers@file"
+      traefik.http.routers.jackett.service: "jackett"
+      traefik.http.services.jackett.loadbalancer.server.port: "9117"
+      traefik.enable: "true"
+  tags: jackett
