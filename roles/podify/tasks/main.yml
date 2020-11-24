@@ -63,4 +63,6 @@
       SECRET_KEY_BASE: "{{podify_secrey_key}}"
       RAILS_LOG_TO_STDOUT: "yes"
       STORAGE_DIR: "/storage"
+    volumes:
+      - "{{project_directory}}/podify:/storage"
   tags: podify
